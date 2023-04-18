@@ -142,11 +142,8 @@ export default defineComponent({
             return <>
               {renderField(formOption)}
               <Popup v-model={[formOption.showPopup, 'show', ['']]} round position="bottom" {...formOption.popup}>
-                <DatetimePicker ref={$refs[formOption.formItem.name]} v-model={_attrs.model[formOption.formItem.name]}
+                <DatetimePicker ref={$refs[formOption.formItem.name]}
                   onCancel={() => { formOption.showPopup = false }}
-                  onChange={(scope: Date) => {
-                    _attrs.model[formOption.formItem.name] = formatterDate(scope, formOption?.control?.type)
-                  }}
                   onConfirm={(scope: Date) => {
                     formOption.showPopup = false;
                     _attrs.model[formOption.formItem.name] = formatterDate(scope, formOption?.control?.type)
