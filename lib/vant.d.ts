@@ -39,7 +39,7 @@ type DatetimePickerProps = {
 }
 
 type FormEvents = {
-  onSubmit?: ((...args: any[]) => any) | undefined | boolean;
+  onSubmit?: ((...args: any[]) => any) | undefined;
   onFailed?: ((...args: any[]) => any) | undefined;
 }
 
@@ -216,7 +216,7 @@ type FormItem = {
   style?: any
   class?: any
   text?: string
-}
+} & FieldSlots
 /**
  * @description: control类型
  * @param style 行内样式

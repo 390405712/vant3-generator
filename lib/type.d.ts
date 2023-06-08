@@ -56,9 +56,9 @@ type RefFormGenerator = () => {
  * @param model 表单数据对象
  * @param formOption 表单生成配置
  */
-type FormAttrs = {
+type FormAttrs<T = Record<string, any>> = {
   [key: string]: any
-  model: Record<string, any>
+  model: T
   formOption: FormOption[]
 } & Partial<FormProps> & FormEvents
 
