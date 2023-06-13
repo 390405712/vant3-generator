@@ -201,28 +201,3 @@ type UploaderSlots = {
 }
 
 type Expose = Partial<FieldExpose & CalendarExpose & PickerExpose & CheckboxGroupExpose & DatetimePickerExpose & UploaderExpose>
-
-
-/**
- * @description: formItem类型
- * @param name 表单item的key
- * @param style 行内样式
- * @param class 类名
- * @param text picker、calendar、cascader 文本值
- */
-type FormItem = {
-  // [key: string]: any
-  name: string
-  style?: any
-  class?: any
-  text?: string
-} & FieldSlots
-/**
- * @description: control类型
- * @param style 行内样式
- * @param class 类名
- */
-type Control = {
-  style?: any
-  class?: any
-}
