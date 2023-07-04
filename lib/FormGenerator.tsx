@@ -5,6 +5,7 @@ import type { FormAttrs, FormOption } from './type.d'
 import type { Expose } from './vant'
 import type { DatetimePickerType } from 'vant/lib/datetime-picker/types'
 import type { CascaderOption } from 'vant/lib/cascader/types'
+import type { PickerColumn, PickerFieldNames, CascaderFieldNames } from 'vant';
 
 export default defineComponent({
   name: 'FormGenerator',
@@ -25,7 +26,7 @@ export default defineComponent({
                 ? ''
                 : slots?.default
                   ? <>{slots.default()[0].children}</>
-                  : <Button block type="primary" native-type="submit">提交</Button>
+                  : <Button loading={_attrs.loading} block type="primary" native-type="submit">提交</Button>
               }
             </CellGroup>
           </Form >
@@ -61,6 +62,25 @@ export default defineComponent({
       }
       function renderControl(formOption: FormOption) {
         $refs[formOption.formItem.name] = ref()
+        function getText(arr: Record<string, any>[], val: string, columnsFieldNames: PickerFieldNames | CascaderFieldNames, splice: boolean = false): any {
+          if (!Array.isArray(arr)) return ''
+          for (let index = 0; index < arr.length; index++) {
+            const item = arr[index];
+            if (typeof item === 'string') {
+              if (item === val) return item[columnsFieldNames?.text ?? 'text'] || ''
+            } else {
+              if (item[(columnsFieldNames as PickerFieldNames)?.values ?? (columnsFieldNames as CascaderFieldNames)?.value ?? 'value'] === val) return item[columnsFieldNames?.text ?? 'text'] || ''
+            }
+            if ((item[columnsFieldNames?.children ?? 'children'] as PickerColumn[])?.length) {
+              const text = getText(item[columnsFieldNames?.children ?? 'children'], val, columnsFieldNames)
+              if (text) {
+                if (splice) return `${item[columnsFieldNames?.text ?? 'text']}/${text}`
+                return text
+              }
+            }
+          }
+          return null;
+        }
         switch (formOption.type) {
           case 'field':
             return <Field ref={$refs[formOption.formItem.name]} inputAlign='right' v-model={_attrs.model[formOption.formItem.name]} {...formOption.formItem} {...formOption.control} v-slots={{ ...formOption?.control?.slots }} />
@@ -92,7 +112,7 @@ export default defineComponent({
           case 'switch':
             return <Field class="field-switch" readonly v-slots={{
               'right-icon': () => (
-                <Switch ref={$refs[formOption.formItem.name]} disabled={_attrs.disabled} size="24px" modelValue={_attrs.model[formOption.formItem.name]} onUpdate:modelValue={(val) => { _attrs.model[formOption.formItem.name] = val }} {...formOption?.control} v-slots={{ ...formOption?.control?.slots }} />
+                <Switch ref={$refs[formOption.formItem.name]} disabled={_attrs.disabled} size="24px" modelValue={_attrs.model[formOption.formItem.name]} onUpdate: modelValue={(val) => { _attrs.model[formOption.formItem.name] = val }} {...formOption?.control} v-slots={{ ...formOption?.control?.slots }} />
               )
             }} {...formOption.formItem} >
             </Field>
@@ -114,6 +134,26 @@ export default defineComponent({
             </Field>
             break;
           case 'picker':
+            if (!formOption.formItem.hasOwnProperty('text') && _attrs.model[formOption.formItem.name] && formOption?.control?.columns) {
+              if (Array.isArray((formOption?.control?.columns as PickerColumn)?.[0]?.values)) {
+                formOption.formItem.text = (formOption?.control?.columns as Record<string, any>[]).reduce((arr: string[], item, index: number) => {
+                  if (typeof item?.values?.[0] === 'string') {
+                    arr.push(item.values?.find((i: string) => i === _attrs.model[formOption.formItem.name]?.[index]))
+                  } else {
+                    arr.push(item.values?.find((i: Record<string, any>) => i[formOption?.control?.columnsFieldNames?.values ?? 'value'] === _attrs.model[formOption.formItem.name]?.[index])?.[formOption?.control?.columnsFieldNames?.text ?? 'text'])
+                  }
+                  return arr
+                }, []).join('/')
+              } else if (Array.isArray(_attrs.model[formOption.formItem.name])) {
+
+                formOption.formItem.text = _attrs.model[formOption.formItem.name].reduce((arr: string[], item: string) => {
+                  arr.push(getText(formOption?.control?.columns as Record<string, any>[], item, formOption?.control?.columnsFieldNames as PickerFieldNames))
+                  return arr
+                }, []).join('/')
+              } else {
+                formOption.formItem.text = getText(formOption?.control?.columns as Record<string, any>[], _attrs.model[formOption.formItem.name], formOption?.control?.columnsFieldNames as PickerFieldNames)
+              }
+            }
             return <>
               {renderField(formOption, true)}
               <Popup v-model={[formOption.showPopup, 'show', ['']]} round position="bottom" {...formOption.popup}>
@@ -185,6 +225,9 @@ export default defineComponent({
             </>
             break;
           case 'cascader':
+            if (_attrs.model[formOption.formItem.name]) {
+              formOption.formItem.text = getText(formOption?.control?.options as CascaderOption[], _attrs.model[formOption.formItem.name], formOption?.control?.fieldNames as CascaderFieldNames, true)
+            }
             return <>
               {renderField(formOption, true)}
               <Popup v-model={[formOption.showPopup, 'show', ['']]} round position="bottom" {...formOption.popup}>
